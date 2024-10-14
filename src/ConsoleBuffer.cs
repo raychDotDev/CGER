@@ -6,34 +6,27 @@ using Microsoft.Win32.SafeHandles;
 
 class ConsoleBuffer
 {
-	private NativeMethods.CharInfo[] CharInfoBuffer { get; set; }
-	SafeFileHandle h;
+	private CharInfo[] CharInfoBuffer { get; set; }
+	private SafeFileHandle FileHandle;
 
 	readonly int width, height;
 
-	public ConsoleBuffer(int w, int he)
+	public ConsoleBuffer(int width, int height)
 	{
-		width = w;
-		height = he;
+		this.width = width;
+		this.height = height;
 
-		h = NativeMethods.CreateFile("CONOUT$", 0x40000000, 2, IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
+		FileHandle = WinAPIWrapper.CreateFile("CONOUT$", 0x40000000, 2, IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
 
-		if (!h.IsInvalid)
+		if (!FileHandle.IsInvalid)
 		{
-			CharInfoBuffer = new NativeMethods.CharInfo[width * height];
+			CharInfoBuffer = new CharInfo[this.width * this.height];
 		}
 	}
 
-	/// <summary>
-	/// Sets the buffer to values
-	/// </summary>
-	/// <param name="GlyphBuffer"></param>
-	/// <param name="charBuffer"> array of chars which get added to the buffer</param>
-	/// <param name="colorBuffer"> array of foreground(front)colors which get added to the buffer</param>
-	/// <param name="background"> array of background colors which get added to the buffer</param>
-	/// <param name="backgroundColor"> default color(may reduce fps?), this is the background color
-	///									null chars will get set to this default background</param>
-	public void SetBuffer(Glyph[,] GlyphBuffer, int backgroundColor)
+	/// <param name="buffer"></param>
+	/// <param name="backgroundColor"> Background color of the buffer</param>
+	public void SetBuffer(Glyph[,] buffer, int backgroundColor)
 	{
 		for (int y = 0; y < height; y++)
 		{
@@ -41,21 +34,21 @@ class ConsoleBuffer
 			{
 				int i = (y * width) + x;
 
-				if (GlyphBuffer[x, y].character == 0)
-					GlyphBuffer[x, y].backgroundColor = backgroundColor;
+				if (buffer[x, y].Character == 0)
+					buffer[x, y].BackgroundColor = backgroundColor;
 
-				CharInfoBuffer[i].Attributes = (short)(GlyphBuffer[x, y].foregroundColor | (GlyphBuffer[x, y].backgroundColor << 4));
-				CharInfoBuffer[i].UnicodeChar = GlyphBuffer[x, y].character;
+				CharInfoBuffer[i].Attributes = (short)(buffer[x, y].ForegroundColor | (buffer[x, y].BackgroundColor << 4));
+				CharInfoBuffer[i].UnicodeChar = buffer[x, y].Character;
 			}
 		}
 	}
 
 	public bool Blit()
 	{
-		NativeMethods.SmallRect rect = new NativeMethods.SmallRect() { Left = 0, Top = 0, Right = (short)width, Bottom = (short)height };
+		SmallRect rect = new SmallRect() { Left = 0, Top = 0, Right = (short)width, Bottom = (short)height };
 
-		return NativeMethods.WriteConsoleOutputW(h, CharInfoBuffer,
-			new NativeMethods.Coord() { X = (short)width, Y = (short)height },
-			new NativeMethods.Coord() { X = 0, Y = 0 }, ref rect);
+		return WinAPIWrapper.WriteConsoleOutputW(FileHandle, CharInfoBuffer,
+			new Coord() { X = (short)width, Y = (short)height },
+			new Coord() { X = 0, Y = 0 }, ref rect);
 	}
 }

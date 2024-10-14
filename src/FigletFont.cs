@@ -35,7 +35,6 @@ public class FigletFont
 			font.CommentLines = ParseInt(configs, 5);
 		}
 
-
 		return font;
 	}
 
@@ -50,7 +49,6 @@ public class FigletFont
 		return i;
 	}
 
-	// ----
 	internal static int GetStringWidth(FigletFont font, string value)
 	{
 		List<int> charWidths = new List<int>();

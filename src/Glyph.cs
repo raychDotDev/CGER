@@ -1,11 +1,32 @@
 ﻿namespace ConsoleGameEngine;
+
 public struct Glyph
 {
-	public char character;
-	public int foregroundColor;
-	public int backgroundColor;
+	public char Character;
+	public int ForegroundColor;
+	public int BackgroundColor;
+	
+	public void Set(char character)
+	{
+		this.Set(character);
+	}
 
-	public void set(char c_, int fg_, int bg_) { character = c_; foregroundColor = fg_; backgroundColor = bg_; }
+	public void Set(char character, int foregroundColor)
+	{
+		this.Set(character,foregroundColor,BackgroundColor);
+	}
 
-	public void clear() { character = (char)0; foregroundColor = 0; backgroundColor = 0; }
+	public void Set(char character, int foregroundColor, int backgroundColor)
+	{
+		this.Character = character;
+		this.ForegroundColor = foregroundColor;
+		this.BackgroundColor = backgroundColor;
+	}
+
+	public void Clear()
+	{
+		this.Character = (char)0;
+		this.ForegroundColor = 0;
+		this.BackgroundColor = 0;
+	}
 }
