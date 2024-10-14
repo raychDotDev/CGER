@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace ConsoleGameEngine;
+namespace CGER;
 
 /// <summary> A FIGlet font. </summary>
 public class FigletFont

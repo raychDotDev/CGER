@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEngine;
+﻿namespace CGER;
 
 /// <summary> Represents an RGB color. </summary>
 public class Color

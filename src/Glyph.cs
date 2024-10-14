@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEngine;
+﻿namespace CGER;
 
 public struct Glyph
 {

@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEngine;
+﻿namespace CGER;
 
 /// <summary> Enum for basic Unicodes. </summary>
 public enum ConsoleCharacter

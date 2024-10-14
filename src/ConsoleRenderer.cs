@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Drawing;
 
-namespace ConsoleGameEngine;
+namespace CGER;
 
 public class ConsoleRenderer
 {
@@ -168,12 +168,6 @@ public class ConsoleRenderer
 		WinAPIWrapper.DrawMenuBar(consoleHandle);
 	}
 	
-	public Point GetCursorPosition()
-	{
-		 WinAPIWrapper.GetCursorPos(out POINT p);
-		 return new Point(p.X, p.Y);
-	}
-
 	#region Primitives
 
 	/// <summary> Draws a single pixel to the screenbuffer. calls new method with Background as the bgColor </summary>

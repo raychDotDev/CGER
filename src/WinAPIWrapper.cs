@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEngine;
+﻿namespace CGER;
 
 using System;
 using System.IO;
