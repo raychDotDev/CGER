@@ -1,6 +1,6 @@
 # CGER - ConsoleGameEngineResurrected
 ### C# CLI Graphics Library for drawing graphics in *WINDOWS* Command Prompt
-Hardfork from [ConsoleGameEngine](https://github.com/ollelogdahl/ConsoleGameEngine/), made by Olle Logdahl, 24 November 2018
+Hardfork from [ConsoleGameEngine](https://github.com/ollelogdahl/ConsoleGameEngine/), originally made by Olle Logdahl, 24 November 2018
 
 <!-- ![downloads](https://img.shields.io/github/downloads/ollelogdahl/ConsoleGameEngine/total) -->
 <!-- ![release](https://img.shields.io/github/v/release/ollelogdahl/ConsoleGameEngine) -->
