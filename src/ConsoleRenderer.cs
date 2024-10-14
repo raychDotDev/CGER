@@ -167,6 +167,12 @@ public class ConsoleRenderer
 
 		WinAPIWrapper.DrawMenuBar(consoleHandle);
 	}
+	
+	public Point GetCursorPosition()
+	{
+		 WinAPIWrapper.GetCursorPos(out POINT p);
+		 return new Point(p.X, p.Y);
+	}
 
 	#region Primitives
 
