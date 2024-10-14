@@ -57,6 +57,18 @@ public class ConsoleRenderer
 
 		WinAPIWrapper.SetConsoleMode(stdInputHandle, 0x0080);
 
+		IntPtr handle = WinAPIWrapper.GetConsoleWindow();
+		IntPtr sysMenu = WinAPIWrapper.GetSystemMenu(handle, false);
+
+		if (handle != IntPtr.Zero)
+		{
+			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_CLOSE, 0x0);
+			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_MINIMIZE, 0x0);
+			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_MAXIMIZE, 0x0);
+			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_SIZE, 0x0);
+			
+		}
+
 		ConsoleFont.SetFont(stdOutputHandle, (short)fontWidth, (short)fontHeight);
 	}
 
@@ -139,7 +151,7 @@ public class ConsoleRenderer
 
 		Rect rect = new Rect();
 		Rect desktopRect = new Rect();
-	
+
 		//TODO: make dis shiet use IPlatformAPIWrapper instead of native win32 api
 		WinAPIWrapper.GetWindowRect(consoleHandle, ref rect);
 		IntPtr desktopHandle = WinAPIWrapper.GetDesktopWindow();
@@ -366,7 +378,7 @@ public class ConsoleRenderer
 	public void DrawLine(Point start, Point end, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		Point delta = end - (Size)start;
-		Point da = new (0,0), db = new (0,0);
+		Point da = new(0, 0), db = new(0, 0);
 		if (delta.X < 0) da.X = -1; else if (delta.X > 0) da.X = 1;
 		if (delta.Y < 0) da.Y = -1; else if (delta.Y > 0) da.Y = 1;
 		if (delta.X < 0) db.X = -1; else if (delta.X > 0) db.X = 1;
