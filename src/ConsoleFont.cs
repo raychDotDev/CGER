@@ -11,7 +11,7 @@ class ConsoleFont
 			return Marshal.GetLastWin32Error();
 		}
 
-		WindowsAPIWrapper.CONSOLE_FONT_INFO_EX cfi = new WindowsAPIWrapper.CONSOLE_FONT_INFO_EX();
+		CONSOLE_FONT_INFO_EX cfi = new CONSOLE_FONT_INFO_EX();
 		cfi.cbSize = (uint)Marshal.SizeOf(cfi);
 		cfi.nFont = 0;
 
@@ -22,7 +22,7 @@ class ConsoleFont
 		if (sizeX < 4 || sizeY < 4) cfi.FaceName = "Consolas";
 		else cfi.FaceName = "Terminal";
 
-		WindowsAPIWrapper.SetCurrentConsoleFontEx(h, false, ref cfi);
+		WinAPIWrapper.SetCurrentConsoleFontEx(h, false, ref cfi);
 		return 0;
 	}
 }
