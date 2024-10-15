@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace CGER;
 
-public class ConsoleRenderer
+public class ConsoleEngine
 {
 	private readonly IntPtr stdInputHandle = WinAPIWrapper.GetStdHandle(-10);
 	private readonly IntPtr stdOutputHandle = WinAPIWrapper.GetStdHandle(-11);
@@ -11,7 +11,7 @@ public class ConsoleRenderer
 	private readonly IntPtr consoleHandle = WinAPIWrapper.GetConsoleWindow();
 
 	/// <summary> The active color palette. </summary> <see cref="Color"/>
-	public Color[] Palette { get; private set; }
+	public Color[] Palette { get; private set; } = Palettes.Pico8;
 
 	/// <summary> The current size of the font. </summary> <see cref="Point"/>
 	public Point FontSize { get; private set; }
@@ -27,25 +27,22 @@ public class ConsoleRenderer
 	/// <summary> Creates a new ConsoleEngine. </summary>
 	/// <param name="width">Target window width.</param>
 	/// <param name="height">Target window height.</param>
-	/// <param name="fontWidth">Target font width.</param>
-	/// <param name="fontHeight">Target font height.</param>
-	public ConsoleRenderer(int width, int height, int fontWidth, int fontHeight, string title = "Untitiled")
+	public ConsoleEngine(int width, int height, string title = "Untitiled")
 	{
 		if (width < 1 || height < 1) throw new ArgumentOutOfRangeException();
-		if (fontWidth < 1 || fontHeight < 1) throw new ArgumentOutOfRangeException();
 
 		Console.Title = title;
 		Console.CursorVisible = false;
 
-		Console.SetWindowPosition(0, 0);
+		// Console.SetWindowPosition(0, 0);
 
-		Console.SetWindowSize(width, height);
+		Console.SetWindowSize(width-1, height-1);
 		Console.SetBufferSize(width, height);
-
+		Console.SetWindowSize(width, height);
+		
 		ConsoleBuffer = new ConsoleBuffer(width, height);
 
 		WindowSize = new Point(width, height);
-		FontSize = new Point(fontWidth, fontHeight);
 
 		GlyphBuffer = new Glyph[width, height];
 		for (int y = 0; y < GlyphBuffer.GetLength(1); y++)
@@ -53,7 +50,6 @@ public class ConsoleRenderer
 				GlyphBuffer[x, y] = new Glyph();
 
 		SetBackgroundColor(0);
-		SetPalette(Palettes.Default);
 
 		WinAPIWrapper.SetConsoleMode(stdInputHandle, 0x0080);
 
@@ -62,14 +58,14 @@ public class ConsoleRenderer
 
 		if (handle != IntPtr.Zero)
 		{
-			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_CLOSE, 0x0);
+			// WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_CLOSE, 0x0);
 			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_MINIMIZE, 0x0);
 			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_MAXIMIZE, 0x0);
 			WinAPIWrapper.DeleteMenu(sysMenu, WinAPIWrapper.SC_SIZE, 0x0);
-			
 		}
 
-		ConsoleFont.SetFont(stdOutputHandle, (short)fontWidth, (short)fontHeight);
+		//delete this maybe...?
+		// ConsoleFont.SetFont(stdOutputHandle, (short)fontWidth, (short)fontHeight);
 	}
 
 	public void SetPixel(Point position, int foregroundColor, char character)
@@ -83,7 +79,12 @@ public class ConsoleRenderer
 			|| position.X < 0 || position.Y < 0) return;
 		GlyphBuffer[position.X, position.Y].Set(character, foregroundColor, backgroundColor);
 	}
-
+	
+	// var MB_OK = 0x00000000L;
+	public void ShowMessageBox(string text, string caption, long type = 0x00000000L)
+	{
+		WinAPIWrapper.MessageBox(new IntPtr(0), text, caption, type);
+	}
 	/// <summary>
 	/// returns gylfh at point given
 	/// </summary>
@@ -167,7 +168,7 @@ public class ConsoleRenderer
 
 		WinAPIWrapper.DrawMenuBar(consoleHandle);
 	}
-	
+
 	#region Primitives
 
 	/// <summary> Draws a single pixel to the screenbuffer. calls new method with Background as the bgColor </summary>

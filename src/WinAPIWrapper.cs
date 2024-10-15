@@ -19,6 +19,9 @@ public class WinAPIWrapper
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern IntPtr GetForegroundWindow();
 
+	[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+	internal static extern int MessageBox(IntPtr hWnd, String text, String caption, long type);
+
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool GetWindowRect(IntPtr hWnd, ref Rect lpRect);
 	[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]

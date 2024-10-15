@@ -4,9 +4,9 @@ namespace CGER;
 
 class ConsoleFont
 {
-	internal static int SetFont(IntPtr h, short sizeX, short sizeY)
+	internal static int SetFontSize(IntPtr handler, short sizeX, short sizeY)
 	{
-		if (h == new IntPtr(-1))
+		if (handler == new IntPtr(-1))
 		{
 			return Marshal.GetLastWin32Error();
 		}
@@ -19,10 +19,11 @@ class ConsoleFont
 		cfi.dwFontSize.Y = sizeY;
 
 		// sätter font till Terminal (Raster)
-		if (sizeX < 4 || sizeY < 4) cfi.FaceName = "Consolas";
-		else cfi.FaceName = "Terminal";
+		// if (sizeX < 4 || sizeY < 4) 
+			// cfi.FaceName = "Terminal";
+		// else cfi.FaceName = "Terminal";
 
-		WinAPIWrapper.SetCurrentConsoleFontEx(h, false, ref cfi);
+		WinAPIWrapper.SetCurrentConsoleFontEx(handler, false, ref cfi);
 		return 0;
 	}
 }
