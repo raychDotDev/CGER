@@ -10,13 +10,10 @@ public class ConsoleEngine
 	private readonly IntPtr stdErrorHandle = WinAPIWrapper.GetStdHandle(-12);
 	private readonly IntPtr consoleHandle = WinAPIWrapper.GetConsoleWindow();
 
-	/// <summary> The active color palette. </summary> <see cref="Color"/>
 	public Color[] Palette { get; private set; } = Palettes.Default;
 
-	/// <summary> The current size of the font. </summary> <see cref="Point"/>
 	public Point FontSize { get; private set; }
 
-	/// <summary> The dimensions of the window in characters. </summary> <see cref="Point"/>
 	public Point WindowSize { get; private set; }
 
 	private Glyph[,] GlyphBuffer { get; set; }
@@ -24,17 +21,11 @@ public class ConsoleEngine
 	private ConsoleBuffer ConsoleBuffer { get; set; }
 	private bool Borderless { get; set; }
 
-	/// <summary> Creates a new ConsoleEngine. </summary>
-	/// <param name="width">Target window width.</param>
-	/// <param name="height">Target window height.</param>
 	public ConsoleEngine(int width, int height, string title = "Untitiled")
 	{
 		if (width < 1 || height < 1) throw new ArgumentOutOfRangeException();
 
 		Console.Title = title;
-		Console.CursorVisible = false;
-
-		// Console.SetWindowPosition(0, 0);
 
 		Console.SetWindowSize(width-1, height-1);
 		Console.SetBufferSize(width, height);
@@ -51,7 +42,7 @@ public class ConsoleEngine
 
 		SetBackgroundColor(0);
 
-		WinAPIWrapper.SetConsoleMode(stdInputHandle, 0x0080);
+		LockConsoleInput();
 
 		IntPtr handle = WinAPIWrapper.GetConsoleWindow();
 		IntPtr sysMenu = WinAPIWrapper.GetSystemMenu(handle, false);
@@ -66,6 +57,19 @@ public class ConsoleEngine
 
 		//delete this maybe...?
 		// ConsoleFont.SetFont(stdOutputHandle, (short)fontWidth, (short)fontHeight);
+	}
+
+	public void UnlockConsoleInput()
+	{
+		WinAPIWrapper.GetConsoleMode(stdInputHandle, out var mode);
+		WinAPIWrapper.SetConsoleMode(stdInputHandle, mode & 0x0020);
+	}
+
+	public void LockConsoleInput()
+	{
+
+		WinAPIWrapper.GetConsoleMode(stdInputHandle, out var mode);
+		WinAPIWrapper.SetConsoleMode(stdInputHandle, mode & ~0x0020);
 	}
 
 	public void SetPixel(Point position, int foregroundColor, char character)
@@ -85,11 +89,7 @@ public class ConsoleEngine
 	{
 		WinAPIWrapper.MessageBox(new IntPtr(0), text, caption, type);
 	}
-	/// <summary>
-	/// returns gylfh at point given
-	/// </summary>
-	/// <param name="position"></param>
-	/// <returns></returns>
+
 	public Glyph? GetGlyph(Point position)
 	{
 		if (position.X > 0 && position.X < GlyphBuffer.GetLength(0) && position.Y > 0 && position.Y < GlyphBuffer.GetLength(1))
@@ -98,9 +98,6 @@ public class ConsoleEngine
 	}
 
 
-	/// <summary> Sets the console's color palette </summary>
-	/// <param name="colors"></param>
-	/// <exception cref="ArgumentException"/> <exception cref="ArgumentNullException"/>
 	public void SetPalette(Color[] colors)
 	{
 		if (colors.Length > 16) throw new ArgumentException("Windows command prompt only support 16 colors.");
@@ -112,22 +109,17 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Sets the console's background color to one in the active palette. </summary>
-	/// <param name="color">Index of background color in palette.</param>
 	public void SetBackgroundColor(int color = 0)
 	{
 		if (color > 16 || color < 0) throw new IndexOutOfRangeException();
 		BackgroundColor = color;
 	}
 
-	/// <summary>Gets Background</summary>
-	/// <returns>Returns the background</returns>
 	public int GetBackgroundColor()
 	{
 		return BackgroundColor;
 	}
 
-	/// <summary> Clears the screenbuffer. </summary>
 	public void ClearBuffer()
 	{
 		for (int y = 0; y < GlyphBuffer.GetLength(1); y++)
@@ -135,7 +127,6 @@ public class ConsoleEngine
 				GlyphBuffer[x, y].Clear();
 	}
 
-	/// <summary> Blits the screenbuffer to the Console window. </summary>
 	public void DisplayBuffer()
 	{
 		ConsoleBuffer.SetBuffer(GlyphBuffer, BackgroundColor);
@@ -171,39 +162,21 @@ public class ConsoleEngine
 
 	#region Primitives
 
-	/// <summary> Draws a single pixel to the screenbuffer. calls new method with Background as the bgColor </summary>
-	/// <param name="v">The Point that should be drawn to.</param>
-	/// <param name="color">The color index.</param>
-	/// <param name="c">The character that should be drawn with.</param>
 	public void SetPixel(Point v, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		SetPixel(v, color, BackgroundColor, (char)c);
 	}
 
-	/// <summary> Overloaded Method Draws a single pixel to the screenbuffer with custom bgColor. </summary>
-	/// <param name="v">The Point that should be drawn to.</param>
-	/// <param name="fgColor">The foreground color index.</param>
-	/// <param name="bgColor">The background color index.</param>
-	/// <param name="c">The character that should be drawn with.</param>
 	public void SetPixel(Point v, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		SetPixel(v, fgColor, bgColor, (char)c);
 	}
 
-	/// <summary> Draws a frame using boxdrawing symbols, calls new method with Background as the bgColor. </summary>
-	/// <param name="pos">Top Left corner of box.</param>
-	/// <param name="end">Bottom Right corner of box.</param>
-	/// <param name="color">The specified color index.</param>
 	public void DrawFrame(Point pos, Point end, int color)
 	{
 		DrawFrame(pos, end, color, BackgroundColor);
 	}
 
-	/// <summary> Draws a frame using boxdrawing symbols. </summary>
-	/// <param name="pos">Top Left corner of box.</param>
-	/// <param name="end">Bottom Right corner of box.</param>
-	/// <param name="fgColor">The specified color index.</param>
-	/// <param name="bgColor">The specified background color index.</param>
 	public void DrawFrame(Point pos, Point end, int fgColor, int bgColor)
 	{
 		for (int i = 1; i < end.X - pos.X; i++)
@@ -224,20 +197,11 @@ public class ConsoleEngine
 		SetPixel(new Point(end.X, end.Y), fgColor, bgColor, ConsoleCharacter.BoxDrawingL_UL);
 	}
 
-	/// <summary> Writes plain text to the buffer, calls new method with Background as the bgColor. </summary>
-	/// <param name="pos">The position to write to.</param>
-	/// <param name="text">String to write.</param>
-	/// <param name="color">Specified color index to write with.</param>
 	public void DrawText(Point pos, string text, int color)
 	{
 		DrawText(pos, text, color, BackgroundColor);
 	}
 
-	/// <summary> Writes plain text to the buffer. </summary>
-	/// <param name="pos">The position to write to.</param>
-	/// <param name="text">String to write.</param>
-	/// <param name="fgColor">Specified color index to write with.</param>
-	/// <param name="bgColor">Specified background color index to write with.</param>
 	public void DrawText(Point pos, string text, int fgColor, int bgColor)
 	{
 		for (int i = 0; i < text.Length; i++)
@@ -245,25 +209,12 @@ public class ConsoleEngine
 			SetPixel(new Point(pos.X + i, pos.Y), fgColor, bgColor, text[i]);
 		}
 	}
-
-	/// <summary>  Writes text to the buffer in a FIGlet font, calls new method with Background as the bgColor. </summary>
-	/// <param name="pos">The Top left corner of the text.</param>
-	/// <param name="text">String to write.</param>
-	/// <param name="font">FIGLET font to write with.</param>
-	/// <param name="color">Specified color index to write with.</param>
-	/// <see cref="FigletFont"/>
+	
 	public void DrawTextFiglet(Point pos, string text, FigletFont font, int color)
 	{
 		DrawTextFiglet(pos, text, font, color, BackgroundColor);
 	}
 
-	/// <summary>  Writes text to the buffer in a FIGlet font. </summary>
-	/// <param name="pos">The Top left corner of the text.</param>
-	/// <param name="text">String to write.</param>
-	/// <param name="font">FIGLET font to write with.</param>
-	/// <param name="fgColor">Specified color index to write with.</param>
-	/// <param name="bgColor">Specified background color index to write with.</param>
-	/// <see cref="FigletFont"/>
 	public void DrawTextFiglet(Point pos, string text, FigletFont font, int fgColor, int bgColor)
 	{
 		if (text == null) throw new ArgumentNullException(nameof(text));
@@ -291,24 +242,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws an Arc, calls new method with Background as the bgColor. </summary>
-	/// <param name="pos">Center of Arc.</param>
-	/// <param name="radius">Radius of Arc.</param>
-	/// <param name="color">Specified color index.</param>
-	/// <param name="arc">angle in degrees, 360 if not specified.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawArc(Point pos, int radius, int color, int arc = 360, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawArc(pos, radius, color, BackgroundColor, arc, c);
 	}
 
-	/// <summary> Draws an Arc. </summary>
-	/// <param name="pos">Center of Arc.</param>
-	/// <param name="radius">Radius of Arc.</param>
-	/// <param name="fgColor">Specified color index.</param>
-	/// <param name="bgColor">Specified background color index.</param>
-	/// <param name="arc">angle in degrees, 360 if not specified.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawArc(Point pos, int radius, int fgColor, int bgColor, int arc = 360, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		for (int a = 0; a < arc; a++)
@@ -321,26 +259,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws a filled Arc, calls new method with Background as the bgColor </summary>
-	/// <param name="pos">Center of Arc.</param>
-	/// <param name="radius">Radius of Arc.</param>
-	/// <param name="start">Start angle in degrees.</param>
-	/// <param name="arc">End angle in degrees.</param>
-	/// <param name="color">Specified color index.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawSemiCircle(Point pos, int radius, int start, int arc, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawSemiCircle(pos, radius, start, arc, color, BackgroundColor, c);
 	}
 
-	/// <summary> Draws a filled Arc. </summary>
-	/// <param name="pos">Center of Arc.</param>
-	/// <param name="radius">Radius of Arc.</param>
-	/// <param name="start">Start angle in degrees.</param>
-	/// <param name="arc">End angle in degrees.</param>
-	/// <param name="fgColor">Specified color index.</param>
-	/// <param name="bgColor">Specified background color index.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawSemiCircle(Point pos, int radius, int start, int arc, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		for (int a = start; a > -arc + start; a--)
@@ -356,26 +279,11 @@ public class ConsoleEngine
 		}
 	}
 
-	// Bresenhams Line Algorithm
-	// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	/// <summary> Draws a line from start to end. (Bresenhams Line), calls overloaded method with background as bgColor </summary>
-	/// <param name="start">Point to draw line from.</param>
-	/// <param name="end">Point to end line at.</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawLine(Point start, Point end, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawLine(start, end, color, BackgroundColor, c);
 	}
 
-	// Bresenhams Line Algorithm
-	// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	/// <summary> Draws a line from start to end. (Bresenhams Line) </summary>
-	/// <param name="start">Point to draw line from.</param>
-	/// <param name="end">Point to end line at.</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw the background with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawLine(Point start, Point end, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		Point delta = end - (Size)start;
@@ -412,22 +320,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws a Rectangle, calls overloaded method with background as bgColor  </summary>
-	/// <param name="pos">Top Left corner of rectangle.</param>
-	/// <param name="end">Bottom Right corner of rectangle.</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawRectangle(Point pos, Point end, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawRectangle(pos, end, color, BackgroundColor, c);
 	}
 
-	/// <summary> Draws a Rectangle. </summary>
-	/// <param name="pos">Top Left corner of rectangle.</param>
-	/// <param name="end">Bottom Right corner of rectangle.</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw to the background with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawRectangle(Point pos, Point end, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		for (int i = 0; i < end.X - pos.X; i++)
@@ -443,22 +340,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws a Rectangle and fills it, calls overloaded method with background as bgColor </summary>
-	/// <param name="a">Top Left corner of rectangle.</param>
-	/// <param name="b">Bottom Right corner of rectangle.</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawRectangleFull(Point a, Point b, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawRectangleFull(a, b, color, BackgroundColor, c);
 	}
 
-	/// <summary> Draws a Rectangle and fills it. </summary>
-	/// <param name="a">Top Left corner of rectangle.</param>
-	/// <param name="b">Bottom Right corner of rectangle.</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw the background with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawRectangleFull(Point a, Point b, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		for (int y = a.Y; y < b.Y; y++)
@@ -470,24 +356,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws a grid, calls overloaded method with background as bgColor </summary>
-	/// <param name="a">Top Left corner of grid.</param>
-	/// <param name="b">Bottom Right corner of grid.</param>
-	/// <param name="spacing">the spacing until next line</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawGrid(Point a, Point b, int spacing, int color, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		DrawGrid(a, b, spacing, color, BackgroundColor, c);
 	}
 
-	/// <summary> Draws a grid. </summary>
-	/// <param name="a">Top Left corner of grid.</param>
-	/// <param name="b">Bottom Right corner of grid.</param>
-	/// <param name="spacing">the spacing until next line</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw the background with.</param>
-	/// <param name="c">Character to use.</param>
 	public void DrawGrid(Point a, Point b, int spacing, int fgColor, int bgColor, ConsoleCharacter c = ConsoleCharacter.Full)
 	{
 		for (int y = a.Y; y < b.Y / spacing; y++)
@@ -500,24 +373,11 @@ public class ConsoleEngine
 		}
 	}
 
-	/// <summary> Draws a Triangle, calls overloaded method with background as bgColor </summary>
-	/// <param name="a">Point A.</param>
-	/// <param name="b">Point B.</param>
-	/// <param name="c">Point C.</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="character">Character to use.</param>
 	public void DrawTriangle(Point a, Point b, Point c, int color, ConsoleCharacter character = ConsoleCharacter.Full)
 	{
 		DrawTriangle(a, b, c, color, BackgroundColor, character);
 	}
 
-	/// <summary> Draws a Triangle. </summary>
-	/// <param name="a">Point A.</param>
-	/// <param name="b">Point B.</param>
-	/// <param name="c">Point C.</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw to the background with.</param>
-	/// <param name="character">Character to use.</param>
 	public void DrawTriangle(Point a, Point b, Point c, int fgColor, int bgColor, ConsoleCharacter character = ConsoleCharacter.Full)
 	{
 		DrawLine(a, b, fgColor, bgColor, character);
@@ -525,26 +385,11 @@ public class ConsoleEngine
 		DrawLine(c, a, fgColor, bgColor, character);
 	}
 
-	// Bresenhams Triangle Algorithm
-
-	/// <summary> Draws a Triangle and fills it, calls overloaded method with background as bgColor </summary>
-	/// <param name="a">Point A.</param>
-	/// <param name="b">Point B.</param>
-	/// <param name="c">Point C.</param>
-	/// <param name="color">Color to draw with.</param>
-	/// <param name="character">Character to use.</param>
 	public void DrawTriangleFull(Point a, Point b, Point c, int color, ConsoleCharacter character = ConsoleCharacter.Full)
 	{
 		DrawTriangleFull(a, b, c, color, BackgroundColor, character);
 	}
 
-	/// <summary> Draws a Triangle and fills it. </summary>
-	/// <param name="a">Point A.</param>
-	/// <param name="b">Point B.</param>
-	/// <param name="c">Point C.</param>
-	/// <param name="fgColor">Color to draw with.</param>
-	/// <param name="bgColor">Color to draw to the background with.</param>
-	/// <param name="character">Character to use.</param>
 	public void DrawTriangleFull(Point a, Point b, Point c, int fgColor, int bgColor, ConsoleCharacter character = ConsoleCharacter.Full)
 	{
 		Point min = new Point(System.Math.Min(System.Math.Min(a.X, b.X), c.X), System.Math.Min(System.Math.Min(a.Y, b.Y), c.Y));
@@ -571,77 +416,54 @@ public class ConsoleEngine
 
 	#endregion Primitives
 
-	/// <summary>Checks to see if the console is in focus </summary>
-	/// <returns>True if Console is in focus</returns>
 	private bool ConsoleFocused()
 	{
 		return WinAPIWrapper.GetConsoleWindow() == WinAPIWrapper.GetForegroundWindow();
 	}
 
-	/// <summary> Checks if specified key is pressed. </summary>
-	/// <param name="key">The key to check.</param>
-	/// <returns>True if key is pressed</returns>
 	public bool IsKeyPressed(ConsoleKey key)
 	{
 		short s = WinAPIWrapper.GetAsyncKeyState((int)key);
 		return (s & 0x8000) > 0 && ConsoleFocused();
 	}
 
-	/// <summary> Checks if specified keyCode is pressed. </summary>
-	/// <param name="virtualkeyCode">keycode to check</param>
-	/// <returns>True if key is pressed</returns>
 	public bool IsKeyPressed(int virtualkeyCode)
 	{
 		short s = WinAPIWrapper.GetAsyncKeyState(virtualkeyCode);
 		return (s & 0x8000) > 0 && ConsoleFocused();
 	}
 
-	/// <summary> Checks if specified key is pressed down. </summary>
-	/// <param name="key">The key to check.</param>
-	/// <returns>True if key is down</returns>
 	public bool IsKeyDown(ConsoleKey key)
 	{
 		int s = Convert.ToInt32(WinAPIWrapper.GetAsyncKeyState((int)key));
 		return (s == -32767) && ConsoleFocused();
 	}
 
-	/// <summary> Checks if specified keyCode is pressed down. </summary>
-	/// <param name="virtualkeyCode">keycode to check</param>
-	/// <returns>True if key is down</returns>
 	public bool IsKeyDown(int virtualkeyCode)
 	{
 		int s = Convert.ToInt32(WinAPIWrapper.GetAsyncKeyState(virtualkeyCode));
 		return (s == -32767) && ConsoleFocused();
 	}
 
-	/// <summary> Checks if left mouse button is pressed down. </summary>
-	/// <returns>True if left mouse button is down</returns>
 	public bool IsMouseLeftDown()
 	{
 		short s = WinAPIWrapper.GetAsyncKeyState(0x01);
 		return (s & 0x8000) > 0 && ConsoleFocused();
 	}
 
-	/// <summary> Checks if right mouse button is pressed down. </summary>
-	/// <returns>True if right mouse button is down</returns>
 	public bool IsMouseRightDown()
 	{
 		short s = WinAPIWrapper.GetAsyncKeyState(0x02);
 		return (s & 0x8000) > 0 && ConsoleFocused();
 	}
 
-	/// <summary> Checks if middle mouse button is pressed down. </summary>
-	/// <returns>True if middle mouse button is down</returns>
 	public bool IsMouseMiddleDown()
 	{
 		short s = WinAPIWrapper.GetAsyncKeyState(0x04);
 		return (s & 0x8000) > 0 && ConsoleFocused();
 	}
 
-	/// <summary> Gets the mouse position. </summary>
-	/// <returns>The mouse's position in character-space.</returns>
-	/// <exception cref="Exception"/>
-	public Point GetCursorPosition()
+	public Point GetMouseCursorPosition()
 	{
 		Rect r = new Rect();
 		WinAPIWrapper.GetWindowRect(consoleHandle, ref r);

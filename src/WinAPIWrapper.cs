@@ -26,7 +26,6 @@ public class WinAPIWrapper
 	internal static extern bool GetWindowRect(IntPtr hWnd, ref Rect lpRect);
 	[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
 	internal static extern IntPtr GetDesktopWindow();
-
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 	[DllImport("user32.dll", SetLastError = true)]
@@ -77,5 +76,8 @@ public class WinAPIWrapper
 	ref CONSOLE_FONT_INFO_EX ConsoleCurrentFontEx);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+	internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
+
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int lpMode);
 }
