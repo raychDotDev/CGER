@@ -11,7 +11,7 @@ public class ConsoleEngine
 	private readonly IntPtr consoleHandle = WinAPIWrapper.GetConsoleWindow();
 
 	/// <summary> The active color palette. </summary> <see cref="Color"/>
-	public Color[] Palette { get; private set; } = Palettes.Pico8;
+	public Color[] Palette { get; private set; } = Palettes.Default;
 
 	/// <summary> The current size of the font. </summary> <see cref="Point"/>
 	public Point FontSize { get; private set; }
